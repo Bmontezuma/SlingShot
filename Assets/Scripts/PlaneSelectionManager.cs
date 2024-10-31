@@ -1,56 +1,91 @@
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
-using UnityEngine.UI;
 using System;
 using System.Collections.Generic;
 
 public class PlaneSelectionManager : MonoBehaviour
 {
-    public static ARPlane selectedPlane;
-    public ARPlaneManager planeManager;
-    public ARRaycastManager raycastManager; // Use ARRaycastManager instead of ARPlaneManager for raycasting
-    public GameObject startButton;
+    private ARPlaneManager arPlaneManager;
+    private ARRaycastManager arRaycastManager;
+    private static ARPlane selectedPlane;
+    public GameObject startButton; // Assign in Inspector
+    private List<ARRaycastHit> hits = new List<ARRaycastHit>();
 
+    // Event to notify when a plane is selected
     public static event Action<ARPlane> onPlaneSelected;
 
-    private void Start()
+    void Start()
     {
-        startButton.SetActive(false);
+        arPlaneManager = GetComponent<ARPlaneManager>();
+        arRaycastManager = GetComponent<ARRaycastManager>();
+        if (startButton != null)
+        {
+            startButton.SetActive(false); // Hide Start button initially
+        }
+        else
+        {
+            Debug.LogError("Start Button not assigned in Inspector!");
+        }
     }
 
-    private void Update()
+    void Update()
     {
-        if (Input.touchCount > 0)
+        // Check for touch input
+        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
         {
+            Debug.Log("Input got");
             Touch touch = Input.GetTouch(0);
-            if (touch.phase == TouchPhase.Began)
+            if (TryGetPlaneFromTouch(touch.position, out ARPlane plane))
             {
-                List<ARRaycastHit> hits = new List<ARRaycastHit>();
-                if (raycastManager.Raycast(touch.position, hits, TrackableType.PlaneWithinPolygon))
-                {
-                    ARPlane plane = planeManager.GetPlane(hits[0].trackableId);
-                    if (plane != null && selectedPlane == null)
-                    {
-                        SelectPlane(plane);
-                    }
-                }
+                SelectPlane(plane);
             }
         }
     }
 
-    private void SelectPlane(ARPlane plane)
+    bool TryGetPlaneFromTouch(Vector2 touchPosition, out ARPlane plane)
     {
+        Debug.Log("touch pos: " + touchPosition);
+        plane = null;
+        if (arRaycastManager.Raycast(touchPosition, hits, TrackableType.PlaneWithinPolygon))
+        {
+            // Get the ARPlane using the trackableId from the hit result
+            var hitTrackableId = hits[0].trackableId;
+            plane = arPlaneManager.GetPlane(hitTrackableId);
+            Debug.Log("Plane detected and selected.");
+            return plane != null;
+        }
+        Debug.Log("No plane detected at touch position.");
+        return false;
+    }
+
+    void SelectPlane(ARPlane plane)
+    {
+        // Save the selected plane
         selectedPlane = plane;
 
-        foreach (var detectedPlane in planeManager.trackables)
+        // Disable all other planes
+        foreach (ARPlane p in arPlaneManager.trackables)
         {
-            if (detectedPlane != selectedPlane)
-                detectedPlane.gameObject.SetActive(false);
+            if (p != selectedPlane)
+            {
+                p.gameObject.SetActive(false);
+            }
         }
 
-        onPlaneSelected?.Invoke(selectedPlane);
+        // Show the Start button if it exists
+        if (startButton != null)
+        {
+            startButton.SetActive(true);
+            Debug.Log("Start button activated on plane selection.");
+        }
 
-        startButton.SetActive(true);
+        // Invoke the onPlaneSelected event
+        onPlaneSelected?.Invoke(selectedPlane);
+    }
+
+    public static ARPlane GetSelectedPlane()
+    {
+        return selectedPlane;
     }
 }

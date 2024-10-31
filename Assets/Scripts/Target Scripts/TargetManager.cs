@@ -4,53 +4,39 @@ using System.Collections.Generic;
 
 public class TargetManager : MonoBehaviour
 {
-    public GameObject targetPrefab;
-    public int targetCount = 5; // Number of targets to instantiate
-    public float targetMoveSpeed = 0.5f; // Speed at which targets move
+    public GameObject startButton; // Assign the Start Button in Inspector
 
-    private List<GameObject> targets = new List<GameObject>();
-    private ARPlane selectedPlane;
-
-    private void Start()
+    void Start()
     {
-        // Only allow targets to spawn after a plane has been selected
-        PlaneSelectionManager.onPlaneSelected += InitializeTargets;
-    }
-
-    private void OnDestroy()
-    {
-        PlaneSelectionManager.onPlaneSelected -= InitializeTargets;
-    }
-
-    private void InitializeTargets(ARPlane plane)
-    {
-        selectedPlane = plane;
-
-        // Instantiate targets and place them on the plane
-        for (int i = 0; i < targetCount; i++)
+        if (startButton == null)
         {
-            Vector3 position = GetRandomPositionOnPlane(selectedPlane);
-            GameObject target = Instantiate(targetPrefab, position, Quaternion.identity, selectedPlane.transform);
-            target.AddComponent<TargetBehavior>().Initialize(targetMoveSpeed, selectedPlane);
-            targets.Add(target);
-
-            // Scale based on distance to camera
-            AdjustScaleByDistance(target);
+            Debug.LogError("Start Button not assigned in Inspector!");
+            return;
         }
+
+        // Subscribe to the static plane selection event to show the Start button
+        PlaneSelectionManager.onPlaneSelected += ShowStartButton;
+
+        // Ensure the Start button is hidden at the beginning
+        startButton.SetActive(false);
     }
 
-    private Vector3 GetRandomPositionOnPlane(ARPlane plane)
+    private void ShowStartButton(ARPlane selectedPlane)
     {
-        // Get random point within the plane boundary
-        Vector2 randomInBoundary = Random.insideUnitCircle * plane.size.x / 2;
-        Vector3 position = new Vector3(randomInBoundary.x, 0, randomInBoundary.y);
-        return plane.center + position; // Offset by the plane center
+        startButton.SetActive(true); // Show the Start button after plane selection
+        Debug.Log("Start button is now visible on selected plane: " + selectedPlane.trackableId);
     }
 
-    private void AdjustScaleByDistance(GameObject target)
+    // This method will be called when the Start button is pressed
+    public void OnStartButtonPressed()
     {
-        float distanceToCamera = Vector3.Distance(Camera.main.transform.position, target.transform.position);
-        float scaleFactor = Mathf.Clamp(1f / distanceToCamera, 0.05f, 0.2f);
-        target.transform.localScale = new Vector3(scaleFactor, scaleFactor, scaleFactor);
+        Debug.Log("Start button pressed; game starting.");
+        // Add your logic here to begin the game or load a new scene
+    }
+
+    void OnDestroy()
+    {
+        // Unsubscribe from the event to avoid memory leaks
+        PlaneSelectionManager.onPlaneSelected -= ShowStartButton;
     }
 }

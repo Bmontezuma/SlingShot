@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
+using UnityEngine.XR.ARFoundation;
 
 public class GameUIManager : MonoBehaviour
 {
@@ -11,23 +12,30 @@ public class GameUIManager : MonoBehaviour
     public Button playAgainButton;
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI ammoText;
+    public ARPlaneManager planeManager;
 
     private int score = 0;
     private int ammoCount = 7;
     private int maxAmmoCount = 7;
-    private bool planeSelected = false;
 
     private void Start()
     {
         startButton.gameObject.SetActive(false);
-        playAgainButton.gameObject.SetActive(false); // Hide Play Again button initially
+        //playAgainButton.gameObject.SetActive(false); // Hide Play Again button initially
         UpdateScore(0);
         UpdateAmmo();
+
+        CheckForPlanes();
+    }
+
+    private void CheckForPlanes()
+    {
+        // Display the start button if any planes are currently tracked
+        startButton.gameObject.SetActive(planeManager.trackables.count > 0);
     }
 
     public void OnPlaneSelected()
     {
-        planeSelected = true;
         startButton.gameObject.SetActive(true);
     }
 
@@ -39,7 +47,6 @@ public class GameUIManager : MonoBehaviour
 
     public void RestartGame()
     {
-        planeSelected = false;
         score = 0;
         ammoCount = maxAmmoCount;
         UpdateScore(0);
