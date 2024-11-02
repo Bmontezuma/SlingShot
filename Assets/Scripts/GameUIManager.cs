@@ -17,11 +17,11 @@ public class GameUIManager : MonoBehaviour
     private int score = 0;
     private int ammoCount = 7;
     private int maxAmmoCount = 7;
+    private bool gameStarted = false; // Track if the game has started
 
     private void Start()
     {
         startButton.gameObject.SetActive(false);
-        //playAgainButton.gameObject.SetActive(false); // Hide Play Again button initially
         UpdateScore(0);
         UpdateAmmo();
 
@@ -30,28 +30,35 @@ public class GameUIManager : MonoBehaviour
 
     private void CheckForPlanes()
     {
-        // Display the start button if any planes are currently tracked
-        startButton.gameObject.SetActive(planeManager.trackables.count > 0);
+        if (!gameStarted)
+        {
+            startButton.gameObject.SetActive(planeManager.trackables.count > 0);
+        }
     }
 
     public void OnPlaneSelected()
     {
-        startButton.gameObject.SetActive(true);
+        if (!gameStarted)
+        {
+            startButton.gameObject.SetActive(true);
+        }
     }
 
     public void StartGame()
     {
         InitializeAmmo();
         startButton.gameObject.SetActive(false);
+        gameStarted = true; // Prevent further activation of the start button
     }
 
     public void RestartGame()
     {
+        gameStarted = false; // Reset game state
         score = 0;
         ammoCount = maxAmmoCount;
         UpdateScore(0);
         UpdateAmmo();
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name); // Restart the scene
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void PlayAgain()
@@ -60,7 +67,7 @@ public class GameUIManager : MonoBehaviour
         ammoCount = maxAmmoCount;
         UpdateScore(0);
         UpdateAmmo();
-        ResetTargets(); // Reset all targets without reselecting the plane
+        ResetTargets();
         playAgainButton.gameObject.SetActive(false);
     }
 
@@ -106,18 +113,16 @@ public class GameUIManager : MonoBehaviour
 
     private void InitializeAmmo()
     {
-        // Instantiate the first Ammo instance in the center of the screen or handle Ammo initialization here
-        // For example: Instantiate(ammoPrefab, initialPosition, Quaternion.identity);
+        // Logic to initialize ammo
     }
 
     private void ResetTargets()
     {
-        // Logic to reset all targets, either by repositioning them or reinitializing them as needed.
+        // Logic to reset all targets
     }
 
     private bool AllTargetsEliminated()
     {
-        // Implement a check here to return true if all targets are eliminated, otherwise false.
         return false; // Replace with actual logic
     }
 }

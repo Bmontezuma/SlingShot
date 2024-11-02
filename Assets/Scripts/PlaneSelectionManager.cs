@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
+using UnityEngine.InputSystem.EnhancedTouch;
 using System;
 using System.Collections.Generic;
 
@@ -9,21 +10,24 @@ public class PlaneSelectionManager : MonoBehaviour
     private ARPlaneManager arPlaneManager;
     private ARRaycastManager arRaycastManager;
     private static ARPlane selectedPlane;
-    public GameObject startButton; // Assign in Inspector
-    public GameUIManager gameUIManager; // Reference to GameUIManager
+    public GameObject startButton;
+    public GameUIManager gameUIManager;
     private List<ARRaycastHit> hits = new List<ARRaycastHit>();
 
-    // Event to notify when a plane is selected
     public static event Action<ARPlane> onPlaneSelected;
+
+    private bool gameStarted = false;
 
     void Start()
     {
         arPlaneManager = GetComponent<ARPlaneManager>();
         arRaycastManager = GetComponent<ARRaycastManager>();
-        
+
+        EnhancedTouchSupport.Enable();
+
         if (startButton != null)
         {
-            startButton.SetActive(false); // Hide Start button initially
+            startButton.SetActive(false);
         }
         else
         {
@@ -31,14 +35,19 @@ public class PlaneSelectionManager : MonoBehaviour
         }
     }
 
+    void OnDestroy()
+    {
+        EnhancedTouchSupport.Disable();
+    }
+
     void Update()
     {
-        // Check for touch input
-        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+        if (!gameStarted && Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
         {
-            Touch touch = Input.GetTouch(0);
+            UnityEngine.Touch touch = Input.GetTouch(0);
             if (TryGetPlaneFromTouch(touch.position, out ARPlane plane))
             {
+                Debug.Log("Plane selected.");
                 SelectPlane(plane);
             }
         }
@@ -60,7 +69,6 @@ public class PlaneSelectionManager : MonoBehaviour
     {
         selectedPlane = plane;
 
-        // Disable all other planes but keep the selected plane active
         foreach (ARPlane p in arPlaneManager.trackables)
         {
             if (p != selectedPlane)
@@ -69,24 +77,24 @@ public class PlaneSelectionManager : MonoBehaviour
             }
         }
 
-        // Ensure the selected plane remains visible
         selectedPlane.gameObject.SetActive(true);
 
-        // Show the Start button if it exists
         if (startButton != null)
         {
             startButton.SetActive(true);
         }
 
-        // Invoke the onPlaneSelected event to notify other scripts
         onPlaneSelected?.Invoke(selectedPlane);
     }
 
     public void OnStartButtonPressed()
     {
+        if (gameStarted) return;
+
         Debug.Log("Start button pressed; game starting.");
-        startButton.SetActive(false); // Hide the Start button
-        gameUIManager.StartGame(); // Trigger GameUIManager to take over
+        startButton.SetActive(false);
+        gameUIManager.StartGame();
+        gameStarted = true;
     }
 
     public static ARPlane GetSelectedPlane()

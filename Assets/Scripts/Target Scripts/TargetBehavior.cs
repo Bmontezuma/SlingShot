@@ -12,22 +12,23 @@ public class TargetBehavior : MonoBehaviour
     {
         moveSpeed = speed;
         moveDirection = GetRandomDirection();
-        planeBounds = new Vector2(plane.size.x, plane.size.y); // Get the plane's width and height
-        deviceCamera = Camera.main.transform; // Reference to the camera
-        AdjustScaleBasedOnDistance(); // Initial scale adjustment
+        planeBounds = new Vector2(plane.size.x, plane.size.y);
+        deviceCamera = Camera.main.transform;
+        AdjustScaleBasedOnDistance();
     }
 
     private void Update()
     {
+        // Move within X and Z bounds
         transform.Translate(moveDirection * moveSpeed * Time.deltaTime);
 
-        // Boundary check and change direction if needed
-        if (Mathf.Abs(transform.localPosition.x) > planeBounds.x / 2 ||
-            Mathf.Abs(transform.localPosition.z) > planeBounds.y / 2)
+        // Boundary check to change direction if needed
+        if (Mathf.Abs(transform.localPosition.x) > planeBounds.x / 2 || Mathf.Abs(transform.localPosition.z) > planeBounds.y / 2)
         {
             moveDirection = GetRandomDirection();
         }
 
+        // Adjust scale based on distance from the camera
         AdjustScaleBasedOnDistance();
     }
 
@@ -39,7 +40,7 @@ public class TargetBehavior : MonoBehaviour
     private void AdjustScaleBasedOnDistance()
     {
         float distance = Vector3.Distance(deviceCamera.position, transform.position);
-        float scaleFactor = Mathf.Clamp(1 / distance, 0.1f, 1f); // Adjust scale range as necessary
+        float scaleFactor = Mathf.Clamp(1 / distance, 0.1f, 1f);
         transform.localScale = Vector3.one * scaleFactor;
     }
 }

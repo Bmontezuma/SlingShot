@@ -25,11 +25,30 @@ public class TargetManager : MonoBehaviour
             return;
         }
 
-        // Spawn targets on the selected plane
+        Debug.Log("Spawning targets on selected plane.");
+
         for (int i = 0; i < targetCount; i++)
         {
             Vector3 randomPosition = GetRandomPositionOnPlane(plane);
-            Instantiate(targetPrefab, randomPosition, Quaternion.identity, plane.transform); // Attach to plane
+            GameObject target = Instantiate(targetPrefab, randomPosition, Quaternion.identity, plane.transform);
+
+            if (target == null)
+            {
+                Debug.LogError("Target instantiation failed.");
+                continue;
+            }
+
+            TargetBehavior targetBehavior = target.GetComponent<TargetBehavior>();
+            if (targetBehavior != null)
+            {
+                float randomSpeed = Random.Range(0.1f, 0.3f); // Adjust speed range as needed
+                targetBehavior.Initialize(randomSpeed, plane);
+                Debug.Log("Target spawned at position: " + randomPosition);
+            }
+            else
+            {
+                Debug.LogError("Target prefab is missing TargetBehavior script.");
+            }
         }
     }
 
