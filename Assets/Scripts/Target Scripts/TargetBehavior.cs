@@ -13,19 +13,38 @@ public class TargetBehavior : MonoBehaviour
         moveSpeed = speed;
         moveDirection = GetRandomDirection();
         planeBounds = new Vector2(plane.size.x, plane.size.y);
-        deviceCamera = Camera.main.transform;
+        deviceCamera = Camera.main?.transform;
+
+        Debug.Log("Target initialized with speed: " + moveSpeed + ", direction: " + moveDirection + ", bounds: " + planeBounds);
         AdjustScaleBasedOnDistance();
+    }
+
+    private void Start()
+    {
+        // Ensure deviceCamera is set if Initialize is not called immediately
+        if (deviceCamera == null)
+        {
+            deviceCamera = Camera.main?.transform;
+            Debug.Log("Device camera assigned in Start: " + deviceCamera);
+        }
     }
 
     private void Update()
     {
-        // Move within X and Z bounds
+        // Move within the X and Z bounds of the plane
         transform.Translate(moveDirection * moveSpeed * Time.deltaTime);
 
-        // Boundary check to change direction if needed
-        if (Mathf.Abs(transform.localPosition.x) > planeBounds.x / 2 || Mathf.Abs(transform.localPosition.z) > planeBounds.y / 2)
+        // Boundary check with direction reflection to stay within plane bounds
+        if (Mathf.Abs(transform.localPosition.x) > planeBounds.x / 2)
         {
-            moveDirection = GetRandomDirection();
+            moveDirection.x = -moveDirection.x;
+            Debug.Log("Direction reversed on X-boundary hit. New direction: " + moveDirection);
+        }
+
+        if (Mathf.Abs(transform.localPosition.z) > planeBounds.y / 2)
+        {
+            moveDirection.z = -moveDirection.z;
+            Debug.Log("Direction reversed on Z-boundary hit. New direction: " + moveDirection);
         }
 
         // Adjust scale based on distance from the camera
@@ -34,13 +53,19 @@ public class TargetBehavior : MonoBehaviour
 
     private Vector3 GetRandomDirection()
     {
-        return new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
+        Vector3 direction = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
+        Debug.Log("Generated random direction: " + direction);
+        return direction;
     }
 
     private void AdjustScaleBasedOnDistance()
     {
+        if (deviceCamera == null) return;
+
         float distance = Vector3.Distance(deviceCamera.position, transform.position);
         float scaleFactor = Mathf.Clamp(1 / distance, 0.1f, 1f);
         transform.localScale = Vector3.one * scaleFactor;
+
+        Debug.Log("Adjusted scale based on distance: " + distance + ", scaleFactor: " + scaleFactor + ", new scale: " + transform.localScale);
     }
 }
