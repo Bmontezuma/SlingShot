@@ -13,6 +13,7 @@ public class GameUIManager : MonoBehaviour
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI ammoText;
     public ARPlaneManager planeManager;
+    public TargetSpawner targetSpawner;
 
     private int score = 0;
     private int ammoCount = 7;
@@ -49,6 +50,16 @@ public class GameUIManager : MonoBehaviour
         InitializeAmmo();
         startButton.gameObject.SetActive(false);
         gameStarted = true; // Prevent further activation of the start button
+
+        // Call SpawnTargets from TargetSpawner to ensure targets spawn on start
+        if (targetSpawner != null)
+        {
+            targetSpawner.SpawnTargets();
+        }
+        else
+        {
+            Debug.LogError("TargetSpawner not assigned in GameUIManager.");
+        }
     }
 
     public void RestartGame()

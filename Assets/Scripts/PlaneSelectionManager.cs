@@ -1,8 +1,6 @@
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
-using UnityEngine.InputSystem.EnhancedTouch;
-using System;
 using System.Collections.Generic;
 
 public class PlaneSelectionManager : MonoBehaviour
@@ -12,18 +10,15 @@ public class PlaneSelectionManager : MonoBehaviour
     private static ARPlane selectedPlane;
     public GameObject startButton;
     public GameUIManager gameUIManager;
+    public TargetSpawner targetSpawner; // Reference to TargetSpawner
+
     private List<ARRaycastHit> hits = new List<ARRaycastHit>();
-
-    public static event Action<ARPlane> onPlaneSelected;
-
     private bool gameStarted = false;
 
     void Start()
     {
         arPlaneManager = GetComponent<ARPlaneManager>();
         arRaycastManager = GetComponent<ARRaycastManager>();
-
-        EnhancedTouchSupport.Enable();
 
         if (startButton != null)
         {
@@ -35,11 +30,6 @@ public class PlaneSelectionManager : MonoBehaviour
         }
     }
 
-    void OnDestroy()
-    {
-        EnhancedTouchSupport.Disable();
-    }
-
     void Update()
     {
         if (!gameStarted && Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
@@ -47,7 +37,6 @@ public class PlaneSelectionManager : MonoBehaviour
             UnityEngine.Touch touch = Input.GetTouch(0);
             if (TryGetPlaneFromTouch(touch.position, out ARPlane plane))
             {
-                Debug.Log("Plane selected.");
                 SelectPlane(plane);
             }
         }
@@ -84,16 +73,23 @@ public class PlaneSelectionManager : MonoBehaviour
             startButton.SetActive(true);
         }
 
-        onPlaneSelected?.Invoke(selectedPlane);
+        // Set the selected plane in TargetSpawner without spawning targets here
+        if (targetSpawner != null)
+        {
+            targetSpawner.SetSelectedPlane(selectedPlane);
+        }
+        else
+        {
+            Debug.LogError("TargetSpawner is not assigned in PlaneSelectionManager.");
+        }
     }
 
     public void OnStartButtonPressed()
     {
         if (gameStarted) return;
 
-        Debug.Log("Start button pressed; game starting.");
         startButton.SetActive(false);
-        gameUIManager.StartGame();
+        gameUIManager.StartGame(); // Calls SpawnTargets
         gameStarted = true;
     }
 
