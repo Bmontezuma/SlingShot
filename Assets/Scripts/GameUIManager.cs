@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 using UnityEngine.XR.ARFoundation;
+using System.Collections.Generic;
 
 public class GameUIManager : MonoBehaviour
 {
@@ -12,17 +13,20 @@ public class GameUIManager : MonoBehaviour
     public Button playAgainButton;
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI ammoText;
+    public Canvas uiCanvas;
     public ARPlaneManager planeManager;
     public TargetSpawner targetSpawner;
 
     private int score = 0;
     private int ammoCount = 7;
     private int maxAmmoCount = 7;
-    private bool gameStarted = false; // Track if the game has started
+    private bool gameStarted = false;
+    private List<GameObject> activeTargets = new List<GameObject>(); // Track active targets
 
     private void Start()
     {
         startButton.gameObject.SetActive(false);
+        uiCanvas.gameObject.SetActive(false); 
         UpdateScore(0);
         UpdateAmmo();
 
@@ -41,6 +45,8 @@ public class GameUIManager : MonoBehaviour
     {
         if (!gameStarted)
         {
+            Debug.Log("Plane selected; displaying Start button and UI canvas.");
+            uiCanvas.gameObject.SetActive(true);
             startButton.gameObject.SetActive(true);
         }
     }
@@ -49,12 +55,12 @@ public class GameUIManager : MonoBehaviour
     {
         InitializeAmmo();
         startButton.gameObject.SetActive(false);
-        gameStarted = true; // Prevent further activation of the start button
+        gameStarted = true;
 
-        // Call SpawnTargets from TargetSpawner to ensure targets spawn on start
         if (targetSpawner != null)
         {
             targetSpawner.SpawnTargets();
+            activeTargets = targetSpawner.GetActiveTargets(); // Get active targets from TargetSpawner
         }
         else
         {
@@ -64,7 +70,7 @@ public class GameUIManager : MonoBehaviour
 
     public void RestartGame()
     {
-        gameStarted = false; // Reset game state
+        gameStarted = false;
         score = 0;
         ammoCount = maxAmmoCount;
         UpdateScore(0);
@@ -122,18 +128,43 @@ public class GameUIManager : MonoBehaviour
         playAgainButton.gameObject.SetActive(true);
     }
 
+    // Initializes ammo count and other ammo-related settings at the start of the game
     private void InitializeAmmo()
     {
-        // Logic to initialize ammo
+        ammoCount = maxAmmoCount;
+        UpdateAmmo();
     }
 
+    // Resets targets by destroying each one in the activeTargets list and clearing the list
     private void ResetTargets()
     {
-        // Logic to reset all targets
+        foreach (GameObject target in activeTargets)
+        {
+            if (target != null)
+            {
+                Destroy(target);
+            }
+        }
+        activeTargets.Clear();
+
+        if (targetSpawner != null)
+        {
+            targetSpawner.SpawnTargets(); // Respawn targets
+            activeTargets = targetSpawner.GetActiveTargets(); // Refresh active targets list
+        }
     }
 
+    // Checks if all targets in the activeTargets list have been eliminated
     private bool AllTargetsEliminated()
     {
-        return false; // Replace with actual logic
+        // Ensure that all elements are either null or inactive
+        foreach (GameObject target in activeTargets)
+        {
+            if (target != null && target.activeInHierarchy)
+            {
+                return false; // At least one target is still active
+            }
+        }
+        return true; // All targets have been eliminated
     }
 }

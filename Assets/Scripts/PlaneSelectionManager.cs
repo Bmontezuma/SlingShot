@@ -8,31 +8,21 @@ public class PlaneSelectionManager : MonoBehaviour
     private ARPlaneManager arPlaneManager;
     private ARRaycastManager arRaycastManager;
     private static ARPlane selectedPlane;
-    public GameObject startButton;
     public GameUIManager gameUIManager;
-    public TargetSpawner targetSpawner; // Reference to TargetSpawner
+    public TargetSpawner targetSpawner;
 
     private List<ARRaycastHit> hits = new List<ARRaycastHit>();
-    private bool gameStarted = false;
+    private bool planeSelected = false;
 
     void Start()
     {
         arPlaneManager = GetComponent<ARPlaneManager>();
         arRaycastManager = GetComponent<ARRaycastManager>();
-
-        if (startButton != null)
-        {
-            startButton.SetActive(false);
-        }
-        else
-        {
-            Debug.LogError("Start Button not assigned in Inspector!");
-        }
     }
 
     void Update()
     {
-        if (!gameStarted && Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+        if (!planeSelected && Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
         {
             UnityEngine.Touch touch = Input.GetTouch(0);
             if (TryGetPlaneFromTouch(touch.position, out ARPlane plane))
@@ -68,29 +58,12 @@ public class PlaneSelectionManager : MonoBehaviour
 
         selectedPlane.gameObject.SetActive(true);
 
-        if (startButton != null)
-        {
-            startButton.SetActive(true);
-        }
-
-        // Set the selected plane in TargetSpawner without spawning targets here
         if (targetSpawner != null)
         {
             targetSpawner.SetSelectedPlane(selectedPlane);
         }
-        else
-        {
-            Debug.LogError("TargetSpawner is not assigned in PlaneSelectionManager.");
-        }
-    }
-
-    public void OnStartButtonPressed()
-    {
-        if (gameStarted) return;
-
-        startButton.SetActive(false);
-        gameUIManager.StartGame(); // Calls SpawnTargets
-        gameStarted = true;
+        
+        gameUIManager.OnPlaneSelected(); // Notify GameUIManager to handle UI
     }
 
     public static ARPlane GetSelectedPlane()

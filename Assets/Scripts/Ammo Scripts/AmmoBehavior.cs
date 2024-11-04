@@ -15,7 +15,7 @@ public class AmmoBehavior : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         initialPosition = transform.position;
-        lineRenderer.enabled = false; // Hide initially
+        lineRenderer.enabled = false;
     }
 
     private void Update()
@@ -28,7 +28,7 @@ public class AmmoBehavior : MonoBehaviour
             {
                 isDragging = true;
                 dragStartPosition = GetTouchWorldPosition(touch.position);
-                lineRenderer.enabled = true; // Show trajectory line
+                lineRenderer.enabled = true;
             }
             else if (touch.phase == TouchPhase.Moved && isDragging)
             {
@@ -40,15 +40,14 @@ public class AmmoBehavior : MonoBehaviour
                 isDragging = false;
                 dragEndPosition = GetTouchWorldPosition(touch.position);
                 LaunchAmmo();
-                lineRenderer.enabled = false; // Hide trajectory line after launch
+                lineRenderer.enabled = false;
             }
         }
     }
 
     private Vector3 GetTouchWorldPosition(Vector2 touchPosition)
     {
-        Vector3 touchWorldPosition = Camera.main.ScreenToWorldPoint(new Vector3(touchPosition.x, touchPosition.y, Camera.main.nearClipPlane + 1f));
-        return touchWorldPosition;
+        return Camera.main.ScreenToWorldPoint(new Vector3(touchPosition.x, touchPosition.y, Camera.main.nearClipPlane + 1f));
     }
 
     private void DragAmmo(Vector2 touchPosition)
@@ -78,10 +77,10 @@ public class AmmoBehavior : MonoBehaviour
         float dragDistance = Vector3.Distance(dragStartPosition, transform.position);
         Vector3 launchVelocity = launchDirection * dragDistance * launchForceMultiplier;
 
-        lineRenderer.positionCount = 10; // Set number of points in the line
+        lineRenderer.positionCount = 10;
         for (int i = 0; i < lineRenderer.positionCount; i++)
         {
-            float time = i * 0.1f; // Step time intervals for the line points
+            float time = i * 0.1f;
             Vector3 point = CalculateTrajectoryPoint(transform.position, launchVelocity, time);
             lineRenderer.SetPosition(i, point);
         }
@@ -89,8 +88,7 @@ public class AmmoBehavior : MonoBehaviour
 
     private Vector3 CalculateTrajectoryPoint(Vector3 startPosition, Vector3 startVelocity, float time)
     {
-        Vector3 gravity = Physics.gravity;
-        return startPosition + startVelocity * time + 0.5f * gravity * time * time;
+        return startPosition + startVelocity * time + 0.5f * Physics.gravity * time * time;
     }
 
     private void OnCollisionEnter(Collision collision)
