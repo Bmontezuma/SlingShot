@@ -21,7 +21,12 @@ public class GameUIManager : MonoBehaviour
     private int ammoCount = 7;
     private int maxAmmoCount = 7;
     private bool gameStarted = false;
-    private List<GameObject> activeTargets = new List<GameObject>(); // Track active targets
+    private List<GameObject> activeTargets = new List<GameObject>();
+
+    // Long Tap Variables
+    private bool isTouching = false;
+    private float touchTime = 0f;
+    private float longTapThreshold = 1.0f; // 1 second for long tap
 
     private void Start()
     {
@@ -29,8 +34,37 @@ public class GameUIManager : MonoBehaviour
         uiCanvas.gameObject.SetActive(false); 
         UpdateScore(0);
         UpdateAmmo();
-
         CheckForPlanes();
+    }
+
+    private void Update()
+    {
+        // Detect a long tap
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
+
+            if (touch.phase == TouchPhase.Began)
+            {
+                isTouching = true;
+                touchTime = 0f;
+            }
+            else if (touch.phase == TouchPhase.Stationary && isTouching)
+            {
+                touchTime += Time.deltaTime;
+
+                // If the touch time exceeds the threshold, toggle UI visibility
+                if (touchTime > longTapThreshold)
+                {
+                    ToggleGameUI();
+                    isTouching = false; // Reset after toggling
+                }
+            }
+            else if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
+            {
+                isTouching = false;
+            }
+        }
     }
 
     private void CheckForPlanes()
@@ -54,17 +88,45 @@ public class GameUIManager : MonoBehaviour
     public void StartGame()
     {
         InitializeAmmo();
-        startButton.gameObject.SetActive(false);
         gameStarted = true;
+        HideGameUI();
 
         if (targetSpawner != null)
         {
             targetSpawner.SpawnTargets();
-            activeTargets = targetSpawner.GetActiveTargets(); // Get active targets from TargetSpawner
+            activeTargets = targetSpawner.GetActiveTargets();
         }
         else
         {
             Debug.LogError("TargetSpawner not assigned in GameUIManager.");
+        }
+    }
+
+    public void ShowGameUI()
+    {
+        startButton.gameObject.SetActive(true);
+        restartButton.gameObject.SetActive(true);
+        quitButton.gameObject.SetActive(true);
+    }
+
+    public void HideGameUI()
+    {
+        startButton.gameObject.SetActive(false);
+        restartButton.gameObject.SetActive(false);
+        quitButton.gameObject.SetActive(false);
+    }
+
+    // Toggles the visibility of the Game UI
+    private void ToggleGameUI()
+    {
+        bool isUIActive = startButton.gameObject.activeSelf;
+        if (isUIActive)
+        {
+            HideGameUI();
+        }
+        else
+        {
+            ShowGameUI();
         }
     }
 
@@ -128,14 +190,12 @@ public class GameUIManager : MonoBehaviour
         playAgainButton.gameObject.SetActive(true);
     }
 
-    // Initializes ammo count and other ammo-related settings at the start of the game
     private void InitializeAmmo()
     {
         ammoCount = maxAmmoCount;
         UpdateAmmo();
     }
 
-    // Resets targets by destroying each one in the activeTargets list and clearing the list
     private void ResetTargets()
     {
         foreach (GameObject target in activeTargets)
@@ -149,22 +209,20 @@ public class GameUIManager : MonoBehaviour
 
         if (targetSpawner != null)
         {
-            targetSpawner.SpawnTargets(); // Respawn targets
-            activeTargets = targetSpawner.GetActiveTargets(); // Refresh active targets list
+            targetSpawner.SpawnTargets();
+            activeTargets = targetSpawner.GetActiveTargets();
         }
     }
 
-    // Checks if all targets in the activeTargets list have been eliminated
     private bool AllTargetsEliminated()
     {
-        // Ensure that all elements are either null or inactive
         foreach (GameObject target in activeTargets)
         {
             if (target != null && target.activeInHierarchy)
             {
-                return false; // At least one target is still active
+                return false;
             }
         }
-        return true; // All targets have been eliminated
+        return true;
     }
 }
