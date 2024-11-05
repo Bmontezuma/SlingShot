@@ -1,9 +1,11 @@
 using UnityEngine;
+using System;
 
 public class AmmoBehavior : MonoBehaviour
 {
     public float launchForceMultiplier = 10f;
     public LineRenderer lineRenderer;
+    public Action OnAmmoDepleted; // Callback to notify manager when ammo is used
 
     private Vector3 initialPosition;
     private Vector3 dragStartPosition;
@@ -14,13 +16,16 @@ public class AmmoBehavior : MonoBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
-        initialPosition = transform.position;
+        initialPosition = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width / 2, Screen.height / 2, Camera.main.nearClipPlane + 1f));
+        transform.position = initialPosition;
+        rb.useGravity = false;
         lineRenderer.enabled = false;
+        gameObject.SetActive(false); // Hide Ammo initially
     }
 
     private void Update()
     {
-        if (Input.touchCount > 0)
+        if (Input.touchCount > 0 && gameObject.activeSelf) // Only respond to input if Ammo is active
         {
             Touch touch = Input.GetTouch(0);
 
@@ -29,6 +34,7 @@ public class AmmoBehavior : MonoBehaviour
                 isDragging = true;
                 dragStartPosition = GetTouchWorldPosition(touch.position);
                 lineRenderer.enabled = true;
+                lineRenderer.SetPosition(0, transform.position);
             }
             else if (touch.phase == TouchPhase.Moved && isDragging)
             {
@@ -55,20 +61,17 @@ public class AmmoBehavior : MonoBehaviour
         Vector3 currentTouchPosition = GetTouchWorldPosition(touchPosition);
         Vector3 dragOffset = currentTouchPosition - dragStartPosition;
         transform.position = initialPosition + dragOffset;
+        lineRenderer.SetPosition(1, transform.position);
     }
 
     private void LaunchAmmo()
     {
         Vector3 launchDirection = (dragStartPosition - dragEndPosition).normalized;
         float dragDistance = Vector3.Distance(dragStartPosition, dragEndPosition);
-        rb.AddForce(launchDirection * dragDistance * launchForceMultiplier, ForceMode.Impulse);
-    }
-
-    private void ResetAmmoPosition()
-    {
+        rb.useGravity = true;
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
-        transform.position = initialPosition;
+        rb.AddForce(launchDirection * dragDistance * launchForceMultiplier, ForceMode.Impulse);
     }
 
     private void ShowTrajectory()
@@ -95,12 +98,22 @@ public class AmmoBehavior : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Target") || collision.gameObject.CompareTag("Plane") || IsOutOfBounds())
         {
-            ResetAmmoPosition();
+            OnAmmoDepleted?.Invoke(); // Notify manager when ammo needs to be replaced
+            Destroy(gameObject); // Destroy current Ammo instance
         }
     }
 
     private bool IsOutOfBounds()
     {
         return transform.position.y < -5f;
+    }
+
+    public void ActivateAmmo()
+    {
+        gameObject.SetActive(true);
+        transform.position = initialPosition;
+        rb.useGravity = false;
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
     }
 }
