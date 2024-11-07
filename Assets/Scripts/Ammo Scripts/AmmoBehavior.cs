@@ -6,18 +6,20 @@ public class AmmoBehavior : MonoBehaviour
     public float launchForceMultiplier = 10f;
     public LineRenderer lineRenderer;
     public Action OnAmmoDepleted;
+    public int maxAmmo = 5; // Maximum ammo count
 
     private Vector3 initialPosition;
     private Vector3 dragStartPosition;
     private Vector3 dragEndPosition;
     private Rigidbody rb;
     private bool isDragging = false;
+    private int currentAmmo; // Tracks the remaining ammo
 
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
+        currentAmmo = maxAmmo; // Initialize ammo count
         
-        // Set Rigidbody to kinematic initially for stable dragging
         rb.isKinematic = true;
         
         // Set initial position a bit in front of the camera for visibility
@@ -40,7 +42,7 @@ public class AmmoBehavior : MonoBehaviour
 
     private void Update()
     {
-        if (Input.touchCount > 0)
+        if (currentAmmo > 0 && Input.touchCount > 0) // Only allow dragging if ammo is available
         {
             Touch touch = Input.GetTouch(0);
 
@@ -63,6 +65,15 @@ public class AmmoBehavior : MonoBehaviour
                 dragEndPosition = GetTouchWorldPosition(touch.position);
                 LaunchAmmo();
                 lineRenderer.enabled = false;
+                
+                currentAmmo--; // Decrease ammo count by 1
+                Debug.Log("Ammo remaining: " + currentAmmo);
+
+                if (currentAmmo <= 0)
+                {
+                    OnAmmoDepleted?.Invoke(); // Trigger ammo depleted event if needed
+                    Debug.Log("Ammo depleted.");
+                }
             }
         }
     }
@@ -86,18 +97,15 @@ public class AmmoBehavior : MonoBehaviour
         Vector3 launchDirection = (dragStartPosition - dragEndPosition).normalized;
         float dragDistance = Vector3.Distance(dragStartPosition, dragEndPosition);
 
-        // Switch Rigidbody to dynamic to allow movement and enable gravity
         rb.isKinematic = false;
         rb.useGravity = true;
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
 
-        // Apply force to launch
         rb.AddForce(launchDirection * dragDistance * launchForceMultiplier, ForceMode.Impulse);
         Debug.Log($"Ammo launched with force: {launchDirection * dragDistance * launchForceMultiplier}");
     }
 
-    // ShowTrajectory method to visualize the launch path
     private void ShowTrajectory()
     {
         Vector3 launchDirection = (dragStartPosition - transform.position).normalized;
@@ -120,11 +128,14 @@ public class AmmoBehavior : MonoBehaviour
 
     public void ResetAmmo()
     {
-        transform.position = initialPosition;
-        rb.useGravity = false;
-        rb.isKinematic = true;
-        rb.linearVelocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
-        Debug.Log($"Ammo reset to initial position: {transform.position}");
+        if (currentAmmo > 0) // Only reset if ammo is available
+        {
+            transform.position = initialPosition;
+            rb.useGravity = false;
+            rb.isKinematic = true;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            Debug.Log($"Ammo reset to initial position: {transform.position}");
+        }
     }
 }

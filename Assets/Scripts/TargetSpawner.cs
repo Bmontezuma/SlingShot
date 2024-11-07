@@ -31,7 +31,10 @@ public class TargetSpawner : MonoBehaviour
             Vector3 spawnPosition = selectedPlane.transform.TransformPoint(new Vector3(x_rand, 0, z_rand));
 
             GameObject target = Instantiate(targetPrefab, spawnPosition, Quaternion.identity, selectedPlane.transform);
-            target.transform.localScale = Vector3.one * 0.2f;
+            
+            // Apply custom scale
+            target.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+            
             target.transform.parent = null;
 
             TargetBehavior targetBehavior = target.GetComponent<TargetBehavior>();
