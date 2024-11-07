@@ -18,8 +18,6 @@ public class GameUIManager : MonoBehaviour
     public TargetSpawner targetSpawner;
 
     private int score = 0;
-    private int ammoCount = 7;
-    private int maxAmmoCount = 7;
     private bool gameStarted = false;
     private List<GameObject> activeTargets = new List<GameObject>();
 
@@ -33,7 +31,6 @@ public class GameUIManager : MonoBehaviour
         startButton.gameObject.SetActive(false);
         uiCanvas.gameObject.SetActive(false); 
         UpdateScore(0);
-        UpdateAmmo();
         CheckForPlanes();
     }
 
@@ -87,7 +84,6 @@ public class GameUIManager : MonoBehaviour
 
     public void StartGame()
     {
-        InitializeAmmo();
         gameStarted = true;
         HideGameUI();
 
@@ -116,7 +112,6 @@ public class GameUIManager : MonoBehaviour
         quitButton.gameObject.SetActive(false);
     }
 
-    // Toggles the visibility of the Game UI
     private void ToggleGameUI()
     {
         bool isUIActive = startButton.gameObject.activeSelf;
@@ -134,18 +129,14 @@ public class GameUIManager : MonoBehaviour
     {
         gameStarted = false;
         score = 0;
-        ammoCount = maxAmmoCount;
         UpdateScore(0);
-        UpdateAmmo();
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void PlayAgain()
     {
         score = 0;
-        ammoCount = maxAmmoCount;
         UpdateScore(0);
-        UpdateAmmo();
         ResetTargets();
         playAgainButton.gameObject.SetActive(false);
     }
@@ -161,25 +152,10 @@ public class GameUIManager : MonoBehaviour
         scoreText.text = "Score: " + score;
     }
 
-    public void UpdateAmmo()
+    public void UpdateAmmoCount(int ammoCount)
     {
         ammoText.text = "Ammo: " + ammoCount;
-
         if (ammoCount <= 0 || AllTargetsEliminated())
-        {
-            DisplayPlayAgainButton();
-        }
-    }
-
-    public void AmmoLaunched()
-    {
-        if (ammoCount > 0)
-        {
-            ammoCount--;
-            UpdateAmmo();
-        }
-
-        if (ammoCount <= 0)
         {
             DisplayPlayAgainButton();
         }
@@ -188,12 +164,6 @@ public class GameUIManager : MonoBehaviour
     private void DisplayPlayAgainButton()
     {
         playAgainButton.gameObject.SetActive(true);
-    }
-
-    private void InitializeAmmo()
-    {
-        ammoCount = maxAmmoCount;
-        UpdateAmmo();
     }
 
     private void ResetTargets()

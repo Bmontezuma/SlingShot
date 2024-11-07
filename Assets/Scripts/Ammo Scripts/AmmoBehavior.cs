@@ -5,7 +5,7 @@ public class AmmoBehavior : MonoBehaviour
 {
     public float launchForceMultiplier = 10f;
     public LineRenderer lineRenderer;
-    public Action OnAmmoDepleted; // Callback to notify manager when ammo is used
+    public Action OnAmmoDepleted;
 
     private Vector3 initialPosition;
     private Vector3 dragStartPosition;
@@ -16,16 +16,31 @@ public class AmmoBehavior : MonoBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
-        initialPosition = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width / 2, Screen.height / 2, Camera.main.nearClipPlane + 1f));
+        
+        // Set Rigidbody to kinematic initially for stable dragging
+        rb.isKinematic = true;
+        
+        // Set initial position a bit in front of the camera for visibility
+        initialPosition = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width / 2, Screen.height / 2, 1f));
         transform.position = initialPosition;
+        
+        // Disable gravity and ensure LineRenderer is set up
         rb.useGravity = false;
-        lineRenderer.enabled = false;
-        gameObject.SetActive(false); // Hide Ammo initially
+        if (lineRenderer != null)
+        {
+            lineRenderer.enabled = false;
+        }
+        else
+        {
+            Debug.LogWarning("LineRenderer is not assigned.");
+        }
+
+        Debug.Log($"Ammo initialized at position: {transform.position}");
     }
 
     private void Update()
     {
-        if (Input.touchCount > 0 && gameObject.activeSelf) // Only respond to input if Ammo is active
+        if (Input.touchCount > 0)
         {
             Touch touch = Input.GetTouch(0);
 
@@ -35,6 +50,7 @@ public class AmmoBehavior : MonoBehaviour
                 dragStartPosition = GetTouchWorldPosition(touch.position);
                 lineRenderer.enabled = true;
                 lineRenderer.SetPosition(0, transform.position);
+                Debug.Log("Touch began, starting drag.");
             }
             else if (touch.phase == TouchPhase.Moved && isDragging)
             {
@@ -53,7 +69,7 @@ public class AmmoBehavior : MonoBehaviour
 
     private Vector3 GetTouchWorldPosition(Vector2 touchPosition)
     {
-        return Camera.main.ScreenToWorldPoint(new Vector3(touchPosition.x, touchPosition.y, Camera.main.nearClipPlane + 1f));
+        return Camera.main.ScreenToWorldPoint(new Vector3(touchPosition.x, touchPosition.y, 1f));
     }
 
     private void DragAmmo(Vector2 touchPosition)
@@ -62,18 +78,26 @@ public class AmmoBehavior : MonoBehaviour
         Vector3 dragOffset = currentTouchPosition - dragStartPosition;
         transform.position = initialPosition + dragOffset;
         lineRenderer.SetPosition(1, transform.position);
+        Debug.Log($"Dragging Ammo. Current Position: {transform.position}");
     }
 
     private void LaunchAmmo()
     {
         Vector3 launchDirection = (dragStartPosition - dragEndPosition).normalized;
         float dragDistance = Vector3.Distance(dragStartPosition, dragEndPosition);
+
+        // Switch Rigidbody to dynamic to allow movement and enable gravity
+        rb.isKinematic = false;
         rb.useGravity = true;
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
+
+        // Apply force to launch
         rb.AddForce(launchDirection * dragDistance * launchForceMultiplier, ForceMode.Impulse);
+        Debug.Log($"Ammo launched with force: {launchDirection * dragDistance * launchForceMultiplier}");
     }
 
+    // ShowTrajectory method to visualize the launch path
     private void ShowTrajectory()
     {
         Vector3 launchDirection = (dragStartPosition - transform.position).normalized;
@@ -94,26 +118,13 @@ public class AmmoBehavior : MonoBehaviour
         return startPosition + startVelocity * time + 0.5f * Physics.gravity * time * time;
     }
 
-    private void OnCollisionEnter(Collision collision)
+    public void ResetAmmo()
     {
-        if (collision.gameObject.CompareTag("Target") || collision.gameObject.CompareTag("Plane") || IsOutOfBounds())
-        {
-            OnAmmoDepleted?.Invoke(); // Notify manager when ammo needs to be replaced
-            Destroy(gameObject); // Destroy current Ammo instance
-        }
-    }
-
-    private bool IsOutOfBounds()
-    {
-        return transform.position.y < -5f;
-    }
-
-    public void ActivateAmmo()
-    {
-        gameObject.SetActive(true);
         transform.position = initialPosition;
         rb.useGravity = false;
+        rb.isKinematic = true;
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
+        Debug.Log($"Ammo reset to initial position: {transform.position}");
     }
 }
