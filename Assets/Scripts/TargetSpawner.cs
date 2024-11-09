@@ -21,8 +21,8 @@ public class TargetSpawner : MonoBehaviour
         if (selectedPlane == null || hasSpawned) return;
 
         hasSpawned = true;
-        float x_dim = selectedPlane.size.x / 2;
-        float z_dim = selectedPlane.size.y / 2;
+        float x_dim = selectedPlane.size.x / 4;
+        float z_dim = selectedPlane.size.y / 4;
 
         for (int i = 0; i < targetCount; i++)
         {
