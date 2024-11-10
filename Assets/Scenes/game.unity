@@ -235,10 +235,30 @@ PrefabInstance:
       propertyPath: m_Name
       value: Target
       objectReference: {fileID: 0}
+    - target: {fileID: 578426582122293859, guid: 04f2a07d6eb4fd246a34acabbf9c64ec,
+        type: 3}
+      propertyPath: m_TagString
+      value: Enemy
+      objectReference: {fileID: 0}
+    - target: {fileID: 997730614845828812, guid: 04f2a07d6eb4fd246a34acabbf9c64ec,
+        type: 3}
+      propertyPath: m_UseGravity
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 997730614845828812, guid: 04f2a07d6eb4fd246a34acabbf9c64ec,
         type: 3}
       propertyPath: m_Constraints
       value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 997730614845828812, guid: 04f2a07d6eb4fd246a34acabbf9c64ec,
+        type: 3}
+      propertyPath: m_Interpolate
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 997730614845828812, guid: 04f2a07d6eb4fd246a34acabbf9c64ec,
+        type: 3}
+      propertyPath: m_CollisionDetection
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6021543276150059046, guid: 04f2a07d6eb4fd246a34acabbf9c64ec,
         type: 3}
@@ -508,7 +528,7 @@ PrefabInstance:
     - target: {fileID: 737605121832618778, guid: 1dae7c0e75e91de428b18d40081cc05c,
         type: 3}
       propertyPath: m_IsTrigger
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3178916836941586372, guid: 1dae7c0e75e91de428b18d40081cc05c,
         type: 3}
@@ -527,8 +547,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3399150469380279316, guid: 1dae7c0e75e91de428b18d40081cc05c,
         type: 3}
-      propertyPath: m_IsKinematic
+      propertyPath: m_Interpolate
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3399150469380279316, guid: 1dae7c0e75e91de428b18d40081cc05c,
+        type: 3}
+      propertyPath: m_IsKinematic
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3399150469380279316, guid: 1dae7c0e75e91de428b18d40081cc05c,
         type: 3}
@@ -639,7 +664,17 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1571486793}
+    - targetCorrespondingSourceObject: {fileID: 3178916836941586372, guid: 1dae7c0e75e91de428b18d40081cc05c,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1571486794}
   m_SourcePrefab: {fileID: 100100000, guid: 1dae7c0e75e91de428b18d40081cc05c, type: 3}
+--- !u!23 &608830357 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 3871887327101979955, guid: 1dae7c0e75e91de428b18d40081cc05c,
+    type: 3}
+  m_PrefabInstance: {fileID: 608830356}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &612408228
 GameObject:
   m_ObjectHideFlags: 0
@@ -1162,6 +1197,21 @@ MonoBehaviour:
   ammoCountText: {fileID: 1655112477188770936}
   scoreText: {fileID: 6289327852329736433}
   playAgainButton: {fileID: 2572751169523659335}
+--- !u!114 &1571486794
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1571486778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90b8e618d8ca0aa4f8e609a26b350996, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ammoRenderer: {fileID: 608830357}
+  colorChangeSpeed: 0.8
+  glowIntensity: 5
 --- !u!1 &1590096645
 GameObject:
   m_ObjectHideFlags: 0

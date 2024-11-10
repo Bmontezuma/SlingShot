@@ -26,8 +26,15 @@ public class Ammo : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         lineRenderer = GetComponent<LineRenderer>();
-        lineRenderer.enabled = false;
-        
+
+        if (lineRenderer != null)
+        {
+            lineRenderer.enabled = true;           // Enable the line renderer so it's visible initially
+            lineRenderer.positionCount = 2;        // Set the number of positions to 2
+            lineRenderer.startWidth = 0.05f;       // Set the starting width of the line
+            lineRenderer.endWidth = 0.05f;         // Set the ending width of the line
+        }
+
         initialPosition = transform.position;
         currentAmmo = maxAmmo;
         score = 0;
@@ -91,6 +98,8 @@ public class Ammo : MonoBehaviour
     {
         isDragging = false;
         rb.isKinematic = false;
+        rb.useGravity = true; // Enable gravity after releasing
+
         lineRenderer.enabled = false;
 
         Vector3 shootDirection = (initialPosition - transform.position).normalized;
@@ -113,7 +122,13 @@ public class Ammo : MonoBehaviour
     private void UpdateLineRenderer()
     {
         lineRenderer.SetPosition(0, initialPosition);
-        lineRenderer.SetPosition(1, transform.position);
+
+        // Extend the line by moving the end position further in the direction of the drag
+        Vector3 direction = (transform.position - initialPosition).normalized;
+        float extensionLength = Vector3.Distance(initialPosition, transform.position) * 1.5f; // Adjust multiplier as needed
+        Vector3 extendedPosition = initialPosition + direction * extensionLength;
+
+        lineRenderer.SetPosition(1, extendedPosition);
     }
 
     private void UpdateUI()
@@ -126,9 +141,10 @@ public class Ammo : MonoBehaviour
     {
         yield return new WaitForSeconds(1f);
         transform.position = initialPosition;
-        rb.linearVelocity = Vector3.zero;  // Updated to use linearVelocity
+        rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
         rb.isKinematic = true;
+        rb.useGravity = false; // Disable gravity for the next drag
     }
 
     public void PlayAgain()
