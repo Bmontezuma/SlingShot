@@ -29,10 +29,9 @@ public class Ammo : MonoBehaviour
 
         if (lineRenderer != null)
         {
-            lineRenderer.enabled = true;           // Enable the line renderer so it's visible initially
-            lineRenderer.positionCount = 2;        // Set the number of positions to 2
-            lineRenderer.startWidth = 0.05f;       // Set the starting width of the line
-            lineRenderer.endWidth = 0.05f;         // Set the ending width of the line
+            lineRenderer.enabled = true;
+            lineRenderer.startWidth = 0.05f;
+            lineRenderer.endWidth = 0.05f;
         }
 
         initialPosition = transform.position;
@@ -121,14 +120,36 @@ public class Ammo : MonoBehaviour
 
     private void UpdateLineRenderer()
     {
-        lineRenderer.SetPosition(0, initialPosition);
+        int segmentCount = 30; // Number of segments for smooth trajectory curve
+        lineRenderer.positionCount = segmentCount;
 
-        // Extend the line by moving the end position further in the direction of the drag
-        Vector3 direction = (transform.position - initialPosition).normalized;
-        float extensionLength = Vector3.Distance(initialPosition, transform.position) * 1.5f; // Adjust multiplier as needed
-        Vector3 extendedPosition = initialPosition + direction * extensionLength;
+        Vector3[] linePoints = new Vector3[segmentCount];
+        Vector3 startingPosition = transform.position;
+        Vector3 velocity = (initialPosition - transform.position).normalized * (forceMultiplier * (holdTime / maxHoldTime) / rb.mass);
 
-        lineRenderer.SetPosition(1, extendedPosition);
+        float timeStep = 0.1f; // Adjust the time step to control segment spacing
+
+        for (int i = 0; i < segmentCount; i++)
+        {
+            float time = i * timeStep;
+            linePoints[i] = CalculateTrajectoryPoint(startingPosition, velocity, time);
+
+            // Stop drawing the line if it reaches the ground
+            if (linePoints[i].y <= 0)
+            {
+                lineRenderer.positionCount = i + 1;
+                break;
+            }
+        }
+
+        lineRenderer.SetPositions(linePoints);
+    }
+
+    private Vector3 CalculateTrajectoryPoint(Vector3 startPosition, Vector3 initialVelocity, float time)
+    {
+        Vector3 position = startPosition + initialVelocity * time;
+        position.y = startPosition.y + initialVelocity.y * time + 0.5f * Physics.gravity.y * time * time;
+        return position;
     }
 
     private void UpdateUI()
