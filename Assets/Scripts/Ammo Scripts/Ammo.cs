@@ -18,7 +18,7 @@ public class Ammo : MonoBehaviour
     private int score;
     private float holdTime;
     private bool isDragging;
-    private Vector3 initialPosition;
+    public Vector3 initialPosition;
     private LineRenderer lineRenderer;
     private Rigidbody rb;
 
